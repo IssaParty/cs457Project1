@@ -82,12 +82,5 @@ int clientSide(){
 }
 
 int main(int argc, char* argv[]){
-  struct in_addr **addr_list;
-  serverSide();
-  struct in_addr ipv4addr;
-  struct hostent *he;
-  inet_pton(AF_INET, "129.82.44.165", &ipv4addr);
-  he = gethostbyaddr(&ipv4addr, sizeof ipv4addr, AF_INET);
-  printf("%s\n", he->h_name);
   return 0;
 }
