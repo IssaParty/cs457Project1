@@ -140,7 +140,8 @@ struct addrinfo hints, *res;
 int status;
 char ipstr[INET6_ADDRSTRLEN];
 char port[5];
-char message[140];
+char clientMessage[140];
+char serverMessage[140];
 
 // arg error Checking
 
@@ -149,8 +150,8 @@ hints.ai_family = AF_UNSPEC; //accepts ip4 and ip6
 hints.ai_socktype = SOCK_STREAM; //tcp protocol
 hints.ai_flags = AF_INET; //auto fills ip with localhost
 
-scanf("%s", port);
-scanf("%s", ipstr);
+//scanf("%s", port);
+//scanf("%s", ipstr);
 
 if ((status = getaddrinfo(ipstr, port, &hints, &res)) != 0) {
 fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
@@ -173,13 +174,27 @@ if(connect(s, res->ai_addr, res->ai_addrlen) != -1){
 
 //2.  Prompt the user for a message to send. 
 printf("Connected to a friend! You send first.\n");
-scanf("%s", message);
+scanf("%s", clientMessage);
+printf("YOU: %s", clientMessage);
 
 //3.  Send the message to the server.
-int len, bytes_sent;
-len = strlen(message);
-bytes_sent = send(s, message, len, 0);
+int len;
+int bytes_sent;
+len = strlen(clientMessage);
+bytes_sent = send(s, clientMessage, len, 0);
 
+//4. Block to recieve a message from the server
+
+//5. Recieve message and print to screen
+int length;
+int bytes_recieved;
+length = sizeof(serverMessage);
+bytes_recieved = recv(s, serverMessage, length, 0);
+
+scanf("%s", serverMessage);
+printf("FROM: %s", serverMessage);
+
+//6. GOTO step 2
 return 0;
 }
 
