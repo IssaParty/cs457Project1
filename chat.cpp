@@ -52,7 +52,6 @@ bind (s, res->ai_addr, res->ai_addrlen);
 
 //extracting ip address the socket is binded to
 inet_ntop(res->ai_family, res->ai_addr, ipstr, sizeof ipstr);
-//currently prints Ip adress that isn't local host. (I'm working on resolving the bug YG)
 printf(ipstr);
 printf("\n");
 
