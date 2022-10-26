@@ -22,6 +22,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string>
+#include <getopt.h>
 #define BACKLOG 10
 
 void checkIPbuffer(char *IPbuffer){
@@ -108,7 +109,7 @@ while(running){
   socklen_t addr_size = sizeof their_addr;
  
   int sockfd = accept(s, (struct sockaddr *)&their_addr, &addr_size);
-  printf("I connected to someone")
+  printf("I connected to someone");
   running = false;
 
 }
@@ -133,19 +134,84 @@ return 0;
 
 int clientSide(){
 
-/*
-1.  Set up a TCP connection to the server on the IP and port specified. 
-2.  Prompt the user for a message to send. 
-3.  Send the message to the server. 
-4.  Block to receive a message from the server. 
-5.  Receive message and print to screen. 
-6.  GOTO step 2. 
-*/
+//1.  Set up a TCP connection to the server on the IP and port specified. 
+struct addrinfo hints, *res;
+
+int status;
+char ipstr[INET6_ADDRSTRLEN];
+char port[5];
+char message[140];
+
+// arg error Checking
+
+memset(&hints, 0, sizeof hints);
+hints.ai_family = AF_UNSPEC; //accepts ip4 and ip6
+hints.ai_socktype = SOCK_STREAM; //tcp protocol
+hints.ai_flags = AF_INET; //auto fills ip with localhost
+
+scanf("%s", port);
+scanf("%s", ipstr);
+
+if ((status = getaddrinfo(ipstr, port, &hints, &res)) != 0) {
+fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+return 1;
+ }
+int s;
+
+//set socket setting
+s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
+//bind socket
+
+bind (s, res->ai_addr, res->ai_addrlen);
+
+//connect socket
+printf("Connecting to server...");
+if(connect(s, res->ai_addr, res->ai_addrlen) != -1){
+  printf("Connected!");
+}
+
+//2.  Prompt the user for a message to send. 
+printf("Connected to a friend! You send first.\n");
+scanf("%s", message);
+
+//3.  Send the message to the server.
+int len, bytes_sent;
+len = strlen(message);
+bytes_sent = send(s, message, len, 0);
+
 return 0;
 }
 
 
 int main(int argc, char* argv[]){
   //serverSide() we need to use this function to connect the host with the ip and port
+   //set up -p and -s in getopt to save ip and port numbers
+
+  int opt;
+  char *port;
+  char *ipstr;
+
+  while ((opt =getopt(argc, argv, "p:s:h" )) != -1){
+    switch(opt)
+    {
+      case 'p':
+        port = optarg;
+        break;
+      case 's':
+        ipstr = optarg;
+        break;
+      case 'h':
+        printf("Make sure to run the client side this way: \n");
+        printf("./chat -p [PORT NUMBER] -s [IP ADDRESS] \n");
+        printf("Make sure to run the server side this way: \n ./chat \n");
+        break;
+      default:
+        printf("Make sure to run the client side this way: \n");
+        printf("./chat -p [PORT NUMBER] -s [IP ADDRESS] \n");
+        printf("Make sure to run the server side this way: \n ./chat \n");
+        break;
+    }
+  }
   return 0;
 }
