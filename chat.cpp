@@ -22,9 +22,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string>
-#include <getopt.h>
 #define BACKLOG 10
-
+#define PORT 3490
 void checkIPbuffer(char *IPbuffer){
   if(NULL == IPbuffer){
     perror("inet_ntoa");
@@ -66,12 +65,12 @@ char* getIP(){
     IPbuffer = inet_ntoa(*((struct in_addr*)
                            host_entry->h_addr_list[0]));
     checkIPbuffer(IPbuffer);
-
     return IPbuffer;
 }
 
 
 int serverSide(){
+
 
 /*
 1.  Set up a TCP port and listen for connections (print out IP and PORT is listening on). Waits */
@@ -104,7 +103,7 @@ if((status = listen(s, BACKLOG)) != 0){
 fprintf(stderr, "listen error: %s\n", gai_strerror(status) );
 } 
 
-running = false;
+running = true;
 while(running){
   socklen_t addr_size = sizeof their_addr;
  
@@ -188,11 +187,16 @@ return 0;
 int main(int argc, char* argv[]){
   //serverSide() we need to use this function to connect the host with the ip and port
    //set up -p and -s in getopt to save ip and port numbers
-
+  
   int opt;
   char *port;
   char *ipstr;
-
+  if(argc <=1){
+  serverSide();
+  }
+  
+  // else{
+  
   while ((opt =getopt(argc, argv, "p:s:h" )) != -1){
     switch(opt)
     {
@@ -213,6 +217,6 @@ int main(int argc, char* argv[]){
         printf("Make sure to run the server side this way: \n ./chat \n");
         break;
     }
-  }
+  }//}
   return 0;
 }
