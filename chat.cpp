@@ -78,6 +78,7 @@ bool running = true ;
 struct addrinfo hints, *res, *p;
 struct sockaddr_storage their_addr;
 int status;
+int i;
 char ipstr[INET6_ADDRSTRLEN];
 
 // arg error Checking
@@ -96,18 +97,32 @@ int s;
 
 //set socket setting
 s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-//bind socket
-bind (s, res->ai_addr, res->ai_addrlen);
+if((i = bind (s, res->ai_addr, res->ai_addrlen)) != 0){
+  fprintf(stderr, "bind error: %s\n", gai_strerror(i));
+}
+
 
 if((status = listen(s, BACKLOG)) != 0){
-fprintf(stderr, "listen error: %s\n", gai_strerror(status) );
+  printf("",status);
+  fprintf(stderr, "listen error: %s\n", gai_strerror(status) );
 } 
+else{
+  printf("Welcome to Chat!\nWaitingfor a connection \n%s port %i\n", getIP(), PORT);
+  
+}
+
 
 running = true;
 while(running){
-  socklen_t addr_size = sizeof their_addr;
+
+socklen_t addr_size = sizeof their_addr;
+
+if(int sockfd = accept(s, (struct sockaddr *)&their_addr, &addr_size)==-1){
+ fprintf(stderr, "accept error: %s\n", gai_strerror(status) );
+close(sockfd);
+}
  
-  int sockfd = accept(s, (struct sockaddr *)&their_addr, &addr_size);
+  
   printf("I connected to someone");
   running = false;
 
@@ -147,7 +162,7 @@ char message[140];
 memset(&hints, 0, sizeof hints);
 hints.ai_family = AF_UNSPEC; //accepts ip4 and ip6
 hints.ai_socktype = SOCK_STREAM; //tcp protocol
-hints.ai_flags = AF_INET; //auto fills ip with localhost
+
 
 //scanf("%s", port);
 //scanf("%s", ipstr);
@@ -166,9 +181,9 @@ s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 bind (s, res->ai_addr, res->ai_addrlen);
 
 //connect socket
-printf("Connecting to server...");
+printf("Connecting to server...\n");
 if(connect(s, res->ai_addr, res->ai_addrlen) != -1){
-  printf("Connected!");
+  printf("Connected!\n");
 }
 
 //2.  Prompt the user for a message to send. 
@@ -192,7 +207,9 @@ int main(int argc, char* argv[]){
   char *port;
   char *ipstr;
   if(argc <=1){
+  printf("%s \n", getIP());
   serverSide();
+  return 0;
   }
   
   // else{
@@ -202,9 +219,9 @@ int main(int argc, char* argv[]){
     {
       case 'p':
         port = optarg;
+        break;
       case 's':
         ipstr = optarg;
-        clientSide(port, ipstr);
         break;
       case 'h':
         printf("Make sure to run the client side this way: \n");
@@ -217,6 +234,7 @@ int main(int argc, char* argv[]){
         printf("Make sure to run the server side this way: \n ./chat \n");
         break;
     }
-  }//}
+  }
+  clientSide(port, ipstr);//}
   return 0;
 }
