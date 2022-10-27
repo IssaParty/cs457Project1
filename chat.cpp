@@ -132,15 +132,16 @@ if(listen(sockfd, B))
 return 0;
 }
 
-int clientSide(){
+int clientSide(char *portNo, char *ip){
 
 //1.  Set up a TCP connection to the server on the IP and port specified. 
 struct addrinfo hints, *res;
 
 int status;
-char ipstr[INET6_ADDRSTRLEN];
-char port[5];
+char *ipstr = ip;
+char *port = portNo;
 char message[140];
+ //int port = atoi(portNo);
 
 // arg error Checking
 
@@ -149,8 +150,8 @@ hints.ai_family = AF_UNSPEC; //accepts ip4 and ip6
 hints.ai_socktype = SOCK_STREAM; //tcp protocol
 hints.ai_flags = AF_INET; //auto fills ip with localhost
 
-scanf("%s", port);
-scanf("%s", ipstr);
+//scanf("%s", port);
+//scanf("%s", ipstr);
 
 if ((status = getaddrinfo(ipstr, port, &hints, &res)) != 0) {
 fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
@@ -197,9 +198,9 @@ int main(int argc, char* argv[]){
     {
       case 'p':
         port = optarg;
-        break;
       case 's':
         ipstr = optarg;
+        clientSide(port, ipstr);
         break;
       case 'h':
         printf("Make sure to run the client side this way: \n");
