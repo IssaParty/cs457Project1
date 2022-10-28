@@ -72,10 +72,6 @@ char* getIP(){
 
 
 int serverSide(){
-
-char client_message[MAX_BUFF];
-char server_message[MAX_BUFF];
-
 /*
 1.  Set up a TCP port and listen for connections (print out IP and PORT is listening on). Waits */
 bool running = true ; 
@@ -97,16 +93,15 @@ if ((status = getaddrinfo(NULL, "3490", &hints, &res)) != 0) {
 fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
 return 1;
  }
-int s;
+int sock_fd;
 
 //set socket setting
-s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-if((i = bind (s, res->ai_addr, res->ai_addrlen)) != 0){
+sock_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+if((i = bind (sock_fd, res->ai_addr, res->ai_addrlen)) != 0){
   fprintf(stderr, "bind error: %s\n", gai_strerror(i));
 }
 
-
-if((status = listen(s, BACKLOG)) != 0){
+if((status = listen(sock_fd, BACKLOG)) != 0){
   printf("",status);
   fprintf(stderr, "listen error: %s\n", gai_strerror(status) );
 } 
@@ -114,107 +109,96 @@ else{
   printf("Welcome to Chat!\nWaitingfor a connection \n%s port %i\n", getIP(), PORT);
   
 }
-
-
-running = true;
-while(running){
-
 socklen_t addr_size = sizeof their_addr;
-
-if(int sockfd = accept(s, (struct sockaddr *)&their_addr, &addr_size)==-1){
- fprintf(stderr, "accept error: %s\n", gai_strerror(status) );
-close(sockfd);
+int server_sock;
+if(server_sock = accept(sock_fd, (struct sockaddr *)&their_addr, &addr_size)==-1){
+ fprintf(stderr, "accept error: %s\n", gai_strerror(server_sock) );
+ return 0;
 }
- 
+else {
+    printf("Found a friend! You receive first.\n");
+}
+
+
+//infinitely prompts server for input and restarts loop of input is too long.
+while(true){
+  char client_message[MAX_BUFF];
+  char server_message[MAX_BUFF];
+  char buffer[1024] = {0};
+  printf("%ld\n",read(server_sock, buffer , 1024));
   
-  printf("Found a friend! You receive first.\n");
+  printf("Friend: %s\n", buffer);
 
-  recv(s, client_message , sizeof(client_message) , 0);
-  printf("%s\n", client_message);
-
-  send(s, server_message, MAX_BUFF, 0);
-
-  running = true;
-
+  while(true){
+    printf("You: ");
+    scanf("%s", server_message);
+    if( strlen(server_message) > MAX_BUFF){
+        printf("Input too long.\n");
+        continue;
+    }
+    break;
+  }
+  send(server_sock, server_message, strlen(server_message), 0);
 }
-//extracting ip address the socket is binded t
-//currently prints Ip adress that isn't local host. (I'm working on resolving the bug YG)
-
-
-
-/*
-2.  Accept connection from client 
-
-if(listen(sockfd, B))
-
-3.  Block to receive a message from the client. 
-4.  Receive message and print to screen. 
-5.  Prompt the user for a message to send. 
-6.  Send the message to the client. 
-7.  GOTO step 3. 
-*/
 return 0;
 }
 
 int clientSide(char *portNo, char *ip){
-
 //1.  Set up a TCP connection to the server on the IP and port specified. 
 struct addrinfo hints, *res;
 
 int status;
 char *ipstr = ip;
 char *port = portNo;
-char *client_message[MAX_BUFF];
-char *server_message[MAX_BUFF];
+
  //int port = atoi(portNo);
 
-// arg error Checking
-
-memset(&hints, 0, sizeof hints);
+memset(&hints, 0, sizeof hints); 
 hints.ai_family = AF_UNSPEC; //accepts ip4 and ip6
 hints.ai_socktype = SOCK_STREAM; //tcp protocol
-
-
-//scanf("%s", port);
-//scanf("%s", ipstr);
 
 if ((status = getaddrinfo(ipstr, port, &hints, &res)) != 0) {
 fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
 return 1;
  }
-int s;
+int sock_fd;
 
-//set socket setting
-s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+sock_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
-//bind socket
-
-bind (s, res->ai_addr, res->ai_addrlen);
-
-//connect socket
 printf("Connecting to server...\n");
-if(connect(s, res->ai_addr, res->ai_addrlen) != -1){
+if(connect(sock_fd, res->ai_addr, res->ai_addrlen) != -1){
   printf("Connected!\n");
+}
+else{
+    printf("Could not connect to server with ip: %s and port:%s \n", ipstr, port);
+    return 0;
 }
 
 //2.  Prompt the user for a message to send. 
 printf("Connected to a friend! You send first.\n");
-scanf("%s", client_message);
 
-//3.  Send the message to the server.
+//Infinitely prompts user for input and restarts if input is too long
+while(true){
+    char client_message[MAX_BUFF];
+    char server_message[MAX_BUFF];
+    char buffer [1024] = {0};
+    printf("YOU: ");
+    scanf("%s", client_message);
 
-send(s, client_message, MAX_BUFF, 0);
+    if(strlen(client_message) > MAX_BUFF){
+        printf("Input too long.\n");
+        continue;
+    }
+    printf("made\n");
+    send(sock_fd, client_message, strlen(client_message), 0);
+    
+    //block for server response
+    
+    printf("%ld\n",read(sock_fd, buffer ,1024));
 
-
-
-// YOSEF DO A BLOCK COZ I CAN"T FUCKING GET IT TO!!!!!!!!!
-
-recv(s, server_message, sizeof(server_message), 0);
-printf("%s\n", server_message);
-
-return 0;
+    printf("Friend: %s\n", server_message);
+  }
 }
-
 
 int main(int argc, char* argv[]){
   //serverSide() we need to use this function to connect the host with the ip and port
@@ -224,7 +208,6 @@ int main(int argc, char* argv[]){
   char *port;
   char *ipstr;
   if(argc <=1){
-  printf("%s \n", getIP());
   serverSide();
   return 0;
   }
