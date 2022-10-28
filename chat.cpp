@@ -24,6 +24,8 @@
 #include <string>
 #define BACKLOG 10
 #define PORT 3490
+#define MAX_BUFF 140
+
 void checkIPbuffer(char *IPbuffer){
   if(NULL == IPbuffer){
     perror("inet_ntoa");
@@ -71,6 +73,8 @@ char* getIP(){
 
 int serverSide(){
 
+char client_message[MAX_BUFF];
+char server_message[MAX_BUFF];
 
 /*
 1.  Set up a TCP port and listen for connections (print out IP and PORT is listening on). Waits */
@@ -123,8 +127,14 @@ close(sockfd);
 }
  
   
-  printf("I connected to someone");
-  running = false;
+  printf("Found a friend! You receive first.\n");
+
+  recv(s, client_message , sizeof(client_message) , 0);
+  printf("%s\n", client_message);
+
+  send(s, server_message, MAX_BUFF, 0);
+
+  running = true;
 
 }
 //extracting ip address the socket is binded t
@@ -154,7 +164,8 @@ struct addrinfo hints, *res;
 int status;
 char *ipstr = ip;
 char *port = portNo;
-char message[140];
+char *client_message[MAX_BUFF];
+char *server_message[MAX_BUFF];
  //int port = atoi(portNo);
 
 // arg error Checking
@@ -188,12 +199,18 @@ if(connect(s, res->ai_addr, res->ai_addrlen) != -1){
 
 //2.  Prompt the user for a message to send. 
 printf("Connected to a friend! You send first.\n");
-scanf("%s", message);
+scanf("%s", client_message);
 
 //3.  Send the message to the server.
-int len, bytes_sent;
-len = strlen(message);
-bytes_sent = send(s, message, len, 0);
+
+send(s, client_message, MAX_BUFF, 0);
+
+
+
+// YOSEF DO A BLOCK COZ I CAN"T FUCKING GET IT TO!!!!!!!!!
+
+recv(s, server_message, sizeof(server_message), 0);
+printf("%s\n", server_message);
 
 return 0;
 }
