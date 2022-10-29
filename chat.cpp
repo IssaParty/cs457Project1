@@ -22,6 +22,12 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <string>
+#include <getopt.h>
+#include <sys/select.h>
+#include <strings.h>
+#include <string.h>
+
+
 #define BACKLOG 10
 #define PORT 3490
 #define MAX_BUFF 140
@@ -74,12 +80,12 @@ char* getIP(){
 int serverSide(){
 /*
 1.  Set up a TCP port and listen for connections (print out IP and PORT is listening on). Waits */
-bool running = true ; 
-struct addrinfo hints, *res, *p;
+//bool running = true ; 
+struct addrinfo hints, *res;
 struct sockaddr_storage their_addr;
 int status;
 int i;
-char ipstr[INET6_ADDRSTRLEN];
+//char ipstr[INET6_ADDRSTRLEN];
 
 // arg error Checking
 
@@ -102,7 +108,7 @@ if((i = bind (sock_fd, res->ai_addr, res->ai_addrlen)) != 0){
 }
 
 if((status = listen(sock_fd, BACKLOG)) != 0){
-  printf("",status);
+  //printf("",status);
   fprintf(stderr, "listen error: %s\n", gai_strerror(status) );
 } 
 else{
@@ -111,7 +117,7 @@ else{
 }
 socklen_t addr_size = sizeof their_addr;
 int server_sock;
-if(server_sock = accept(sock_fd, (struct sockaddr *)&their_addr, &addr_size)==-1){
+if((server_sock = accept(sock_fd, (struct sockaddr *)&their_addr, &addr_size))==-1){
  fprintf(stderr, "accept error: %s\n", gai_strerror(server_sock) );
  return 0;
 }
@@ -122,7 +128,7 @@ else {
 
 //infinitely prompts server for input and restarts loop of input is too long.
 while(true){
-  char client_message[MAX_BUFF];
+  //char client_message[MAX_BUFF];
   char server_message[MAX_BUFF];
   char buffer[1024] = {0};
   printf("%ld\n",read(server_sock, buffer , 1024));
@@ -131,7 +137,8 @@ while(true){
 
   while(true){
     printf("You: ");
-    scanf("%s", server_message);
+    //scanf("%s", server_message);
+    fgets(server_message, 1000, stdin);
     if( strlen(server_message) > MAX_BUFF){
         printf("Input too long.\n");
         continue;
@@ -180,23 +187,25 @@ printf("Connected to a friend! You send first.\n");
 //Infinitely prompts user for input and restarts if input is too long
 while(true){
     char client_message[MAX_BUFF];
-    char server_message[MAX_BUFF];
+    //char server_message[MAX_BUFF];
     char buffer [1024] = {0};
     printf("YOU: ");
-    scanf("%s", client_message);
+    //scanf("%s", client_message);
+
+    fgets(client_message, 1000, stdin);
 
     if(strlen(client_message) > MAX_BUFF){
         printf("Input too long.\n");
         continue;
     }
-    printf("made\n");
+    //printf("made\n");
     send(sock_fd, client_message, strlen(client_message), 0);
     
     //block for server response
     
     printf("%ld\n",read(sock_fd, buffer ,1024));
 
-    printf("Friend: %s\n", server_message);
+    printf("Friend: %s\n", buffer);
   }
 }
 
